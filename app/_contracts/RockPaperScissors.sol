@@ -2,53 +2,43 @@
 
 pragma solidity ^0.8.17;
 
-contract RockPaperScissors {
+contract RockPaperScissorsGame {
 
-    uint constant public BET_MIN        = 1e16;        // The minimum bet (1 finney)
-    uint constant public REVEAL_TIMEOUT = 10 minutes;  // Max delay of revelation phase
-    uint public initialBet;                            // Bet of first player
-    uint private firstReveal;                          // Moment of first reveal
+    uint constant public REVEAL_DURATION = 1 minutes;  
+    uint private firstRevealTimestamp;                 
 
-    enum Moves {None, Rock, Paper, Scissors}
-    enum Outcomes {None, PlayerA, PlayerB, Draw}   // Possible outcomes
+    enum Choices {None, Rock, Paper, Scissors}        
+    enum Results {None, PlayerOne, PlayerTwo, Draw}
 
     // Players' addresses
-    address payable playerA;
-    address payable playerB;
+    address playerOne;                                
+    address playerTwo;                                
 
     // Encrypted moves
-    bytes32 private encrMovePlayerA;
-    bytes32 private encrMovePlayerB;
+    bytes32 private encrChoicePlayerOne;              
+    bytes32 private encrChoicePlayerTwo;              
 
     // Clear moves set only after both players have committed their encrypted moves
-    Moves private movePlayerA;
-    Moves private movePlayerB;
+    Choices private choicePlayerOne;                  
+    Choices private choicePlayerTwo;                  
 
     /**************************************************************************/
     /*************************** REGISTRATION PHASE ***************************/
     /**************************************************************************/
 
-    // Bet must be greater than a minimum amount and greater than bet of first player
-    modifier validBet() {
-        require(msg.value >= BET_MIN);
-        require(initialBet == 0 || msg.value >= initialBet);
-        _;
-    }
-
-    modifier notAlreadyRegistered() {
-        require(msg.sender != playerA && msg.sender != playerB);
+    modifier notYetRegistered() {                     
+        require(msg.sender != playerOne && msg.sender != playerTwo);
         _;
     }
 
     // Register a player.
     // Return player's ID upon successful registration.
-    function register() public payable validBet notAlreadyRegistered returns (uint) {
-        if (playerA == address(0x0)) {
-            playerA    = payable(msg.sender);
-            initialBet = msg.value;
+    function signUp() public notYetRegistered returns (uint) {  
+        if (playerOne == address(0x0)) {
+            playerOne = msg.sender;
             return 1;
-        } else if (playerB == address(0x0)) {
-            playerB = payable(msg.sender);
+        } else if (playerTwo == address(0x0)) {
+            playerTwo = msg.sender;
             return 2;
         }
         return 0;
@@ -58,18 +48,18 @@ contract RockPaperScissors {
     /****************************** COMMIT PHASE ******************************/
     /**************************************************************************/
 
-    modifier isRegistered() {
-        require (msg.sender == playerA || msg.sender == playerB);
+    modifier hasRegistered() {                        
+        require (msg.sender == playerOne || msg.sender == playerTwo);
         _;
     }
 
     // Save player's encrypted move.
     // Return 'true' if move was valid, 'false' otherwise.
-    function play(bytes32 encrMove) public isRegistered returns (bool) {
-        if (msg.sender == playerA && encrMovePlayerA == 0x0) {
-            encrMovePlayerA = encrMove;
-        } else if (msg.sender == playerB && encrMovePlayerB == 0x0) {
-            encrMovePlayerB = encrMove;
+    function makeMove(bytes32 encrChoice) public hasRegistered returns (bool) { 
+        if (msg.sender == playerOne && encrChoicePlayerOne == 0x0) {
+            encrChoicePlayerOne = encrChoice;
+        } else if (msg.sender == playerTwo && encrChoicePlayerTwo == 0x0) {
+            encrChoicePlayerTwo = encrChoice;
         } else {
             return false;
         }
@@ -80,37 +70,37 @@ contract RockPaperScissors {
     /****************************** REVEAL PHASE ******************************/
     /**************************************************************************/
 
-    modifier commitPhaseEnded() {
-        require(encrMovePlayerA != 0x0 && encrMovePlayerB != 0x0);
+    modifier commitPhaseFinished() {                  
+        require(encrChoicePlayerOne != 0x0 && encrChoicePlayerTwo != 0x0);
         _;
     }
 
     // Compare clear move given by the player with saved encrypted move.
-    // Return clear move upon success, 'Moves.None' otherwise.
-    function reveal(string memory clearMove) public isRegistered commitPhaseEnded returns (Moves) {
-        bytes32 encrMove = sha256(abi.encodePacked(clearMove));  // Hash of clear input (= "move-password")
-        Moves move       = Moves(getFirstChar(clearMove));       // Actual move (Rock / Paper / Scissors)
+    // Return clear move upon success, 'Choices.None' otherwise.
+    function disclose(string memory clearChoice) public hasRegistered commitPhaseFinished returns (Choices) {  // Previously: reveal
+        bytes32 encrChoice = sha256(abi.encodePacked(clearChoice));  
+        Choices choice     = Choices(getFirstChar(clearChoice));     // Actual move (Rock / Paper / Scissors)
 
         // If move invalid, exit
-        if (move == Moves.None) {
-            return Moves.None;
+        if (choice == Choices.None) {
+            return Choices.None;
         }
 
         // If hashes match, clear move is saved
-        if (msg.sender == playerA && encrMove == encrMovePlayerA) {
-            movePlayerA = move;
-        } else if (msg.sender == playerB && encrMove == encrMovePlayerB) {
-            movePlayerB = move;
+        if (msg.sender == playerOne && encrChoice == encrChoicePlayerOne) {
+            choicePlayerOne = choice;
+        } else if (msg.sender == playerTwo && encrChoice == encrChoicePlayerTwo) {
+            choicePlayerTwo = choice;
         } else {
-            return Moves.None;
+            return Choices.None;
         }
 
         // Timer starts after first revelation from one of the player
-        if (firstReveal == 0) {
-            firstReveal = block.timestamp;
+        if (firstRevealTimestamp == 0) {
+            firstRevealTimestamp = block.timestamp;
         }
 
-        return move;
+        return choice;
     }
 
     // Return first character of a given string.
@@ -127,84 +117,56 @@ contract RockPaperScissors {
         }
     }
 
+
     /**************************************************************************/
     /****************************** RESULT PHASE ******************************/
     /**************************************************************************/
 
-    modifier revealPhaseEnded() {
-        require((movePlayerA != Moves.None && movePlayerB != Moves.None) ||
-                (firstReveal != 0 && block.timestamp > firstReveal + REVEAL_TIMEOUT));
+    modifier revealPhaseFinished() {                  
+        require((choicePlayerOne != Choices.None && choicePlayerTwo != Choices.None) ||
+                (firstRevealTimestamp != 0 && block.timestamp > firstRevealTimestamp + REVEAL_DURATION));
         _;
     }
 
-    // Compute the outcome and pay the winner(s).
-    // Return the outcome.
-    function getOutcome() public revealPhaseEnded returns (Outcomes) {
-        Outcomes outcome;
+    // Compute the outcome and return the outcome.
+    function determineOutcome() public revealPhaseFinished returns (Results) {  
+        Results outcome;
 
-        if (movePlayerA == movePlayerB) {
-            outcome = Outcomes.Draw;
-        } else if ((movePlayerA == Moves.Rock     && movePlayerB == Moves.Scissors) ||
-                   (movePlayerA == Moves.Paper    && movePlayerB == Moves.Rock)     ||
-                   (movePlayerA == Moves.Scissors && movePlayerB == Moves.Paper)    ||
-                   (movePlayerA != Moves.None     && movePlayerB == Moves.None)) {
-            outcome = Outcomes.PlayerA;
+        if (choicePlayerOne == choicePlayerTwo) {
+            outcome = Results.Draw;
+        } else if ((choicePlayerOne == Choices.Rock     && choicePlayerTwo == Choices.Scissors) ||
+                   (choicePlayerOne == Choices.Paper    && choicePlayerTwo == Choices.Rock)     ||
+                   (choicePlayerOne == Choices.Scissors && choicePlayerTwo == Choices.Paper)    ||
+                   (choicePlayerOne != Choices.None     && choicePlayerTwo == Choices.None)) {
+            outcome = Results.PlayerOne;
         } else {
-            outcome = Outcomes.PlayerB;
+            outcome = Results.PlayerTwo;
         }
 
-        address payable addrA = playerA;
-        address payable addrB = playerB;
-        uint betPlayerA       = initialBet;
-        reset();  // Reset game before paying to avoid reentrancy attacks
-        pay(addrA, addrB, betPlayerA, outcome);
-
+        restartGame();  
         return outcome;
     }
 
-    // Pay the winner(s).
-    function pay(address payable addrA, address payable addrB, uint betPlayerA, Outcomes outcome) private {
-        // Uncomment lines below if you need to adjust the gas limit
-        if (outcome == Outcomes.PlayerA) {
-            addrA.transfer(address(this).balance);
-            // addrA.call.value(address(this).balance).gas(1000000)("");
-        } else if (outcome == Outcomes.PlayerB) {
-            addrB.transfer(address(this).balance);
-            // addrB.call.value(address(this).balance).gas(1000000)("");
-        } else {
-            addrA.transfer(betPlayerA);
-            addrB.transfer(address(this).balance);
-            // addrA.call.value(betPlayerA).gas(1000000)("");
-            // addrB.call.value(address(this).balance).gas(1000000)("");
-        }
-    }
-
     // Reset the game.
-    function reset() private {
-        initialBet      = 0;
-        firstReveal     = 0;
-        playerA         = payable(address(0x0));
-        playerB         = payable(address(0x0));
-        encrMovePlayerA = 0x0;
-        encrMovePlayerB = 0x0;
-        movePlayerA     = Moves.None;
-        movePlayerB     = Moves.None;
+    function restartGame() private {                   
+        firstRevealTimestamp = 0;
+        playerOne            = address(0x0);
+        playerTwo            = address(0x0);
+        encrChoicePlayerOne  = 0x0;
+        encrChoicePlayerTwo  = 0x0;
+        choicePlayerOne      = Choices.None;
+        choicePlayerTwo      = Choices.None;
     }
 
     /**************************************************************************/
     /**************************** HELPER FUNCTIONS ****************************/
     /**************************************************************************/
 
-    // Return contract balance
-    function getContractBalance() public view returns (uint) {
-        return address(this).balance;
-    }
-
     // Return player's ID
-    function whoAmI() public view returns (uint) {
-        if (msg.sender == playerA) {
+    function identifyPlayer() public view returns (uint) {  
+        if (msg.sender == playerOne) {
             return 1;
-        } else if (msg.sender == playerB) {
+        } else if (msg.sender == playerTwo) {
             return 2;
         } else {
             return 0;
@@ -212,20 +174,20 @@ contract RockPaperScissors {
     }
 
     // Return 'true' if both players have commited a move, 'false' otherwise.
-    function bothPlayed() public view returns (bool) {
-        return (encrMovePlayerA != 0x0 && encrMovePlayerB != 0x0);
+    function haveBothPlayed() public view returns (bool) {  
+        return (encrChoicePlayerOne != 0x0 && encrChoicePlayerTwo != 0x0);
     }
 
     // Return 'true' if both players have revealed their move, 'false' otherwise.
-    function bothRevealed() public view returns (bool) {
-        return (movePlayerA != Moves.None && movePlayerB != Moves.None);
+    function haveBothRevealed() public view returns (bool) {  
+        return (choicePlayerOne != Choices.None && choicePlayerTwo != Choices.None);
     }
 
     // Return time left before the end of the revelation phase.
-    function revealTimeLeft() public view returns (int) {
-        if (firstReveal != 0) {
-            return int((firstReveal + REVEAL_TIMEOUT) - block.timestamp);
+    function timeLeftToReveal() public view returns (int) {  
+        if (firstRevealTimestamp != 0) {
+            return int((firstRevealTimestamp + REVEAL_DURATION) - block.timestamp);
         }
-        return int(REVEAL_TIMEOUT);
+        return int(REVEAL_DURATION);
     }
 }
