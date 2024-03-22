@@ -8,8 +8,11 @@ import type { FrameTransactionResponse } from '@coinbase/onchainkit/frame';
 
 async function getResponse(req: NextRequest): Promise<NextResponse | Response> {
   const body: FrameRequest = await req.json();
+  const searchParams = req.nextUrl.searchParams
+  const choice = searchParams.get('choice')
   const { isValid, message } = await getFrameMessage(body, { neynarApiKey: '86611592-8905-4E36-B537-F642BF3A081F', allowFramegear: true, });
 
+  const secret = choice + "-" + message?.interactor.custody_address;
 
   if (!isValid) {
     return new NextResponse('Message not valid', { status: 500 });
@@ -17,8 +20,8 @@ async function getResponse(req: NextRequest): Promise<NextResponse | Response> {
 
   const data = encodeFunctionData({
     abi: BuyMeACoffeeABI,
-    functionName: 'signUp',
-    args: [],
+    functionName: 'disclose',
+    args: [secret],
   });
 
   const txData: FrameTransactionResponse = {

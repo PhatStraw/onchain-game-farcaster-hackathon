@@ -4,12 +4,9 @@ import { NEXT_PUBLIC_URL } from './config';
 
 const frameMetadata = getFrameMetadata({
   buttons: [
-    {
-      label: 'Story time',
-    },
-    {
+   {
       action: 'tx',
-      label: 'Send Base Sepolia',
+      label: 'Start Game',
       target: `${NEXT_PUBLIC_URL}/api/tx`,
       postUrl: `${NEXT_PUBLIC_URL}/api/tx-success`,
     },
