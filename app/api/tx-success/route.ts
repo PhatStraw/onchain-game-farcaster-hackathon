@@ -34,13 +34,13 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
           action: 'tx',
           label: 'Paper',
           target: `${NEXT_PUBLIC_URL}/api/makemove?choice=2`,
-          postUrl: `${NEXT_PUBLIC_URL}/api/confirmmove?choice=1`,
+          postUrl: `${NEXT_PUBLIC_URL}/api/confirmmove?choice=2`,
         },
         {
           action: 'tx',
           label: 'Scissors',
           target: `${NEXT_PUBLIC_URL}/api/makemove?choice=3`,
-          postUrl: `${NEXT_PUBLIC_URL}/api/confirmmove?choice=1`,
+          postUrl: `${NEXT_PUBLIC_URL}/api/confirmmove?choice=3`,
         },
       ],
       image: {

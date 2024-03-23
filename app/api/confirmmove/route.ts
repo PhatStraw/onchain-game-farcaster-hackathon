@@ -1,4 +1,4 @@
-import { FrameRequest, getFrameMessage } from '@coinbase/onchainkit/frame';
+import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { encodeFunctionData, parseEther } from 'viem';
 import { base } from 'viem/chains';
@@ -11,7 +11,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse | Response> {
   const searchParams = req.nextUrl.searchParams
   const choice = searchParams.get('choice')
   const { isValid, message } = await getFrameMessage(body, { neynarApiKey: '86611592-8905-4E36-B537-F642BF3A081F', allowFramegear: true, });
-
+console.log("confirm move", message)
   const secret = choice + "-" + message?.interactor.custody_address;
 
   if (!isValid) {
@@ -34,6 +34,34 @@ async function getResponse(req: NextRequest): Promise<NextResponse | Response> {
       value: parseEther('0.00').toString(), // 0.00004 ETH
     },
   };
+
+//     return new NextResponse(
+//     getFrameHtmlResponse({
+//       buttons: [
+//         {
+//           label: `State: ${state?.page || 0}`,
+//         },
+//         {
+//           action: 'link',
+//           label: 'OnchainKit',
+//           target: 'https://onchainkit.xyz',
+//         },
+//         {
+//           action: 'post_redirect',
+//           label: 'Dog pictures',
+//         },
+//       ],
+//       input:{text: `${}`},
+//       image: {
+//         src: `${NEXT_PUBLIC_URL}/park-1.png`,
+//       },
+//       postUrl: `${NEXT_PUBLIC_URL}/api/frame`,
+//       state: {
+//         page: state?.page + 1,
+//         time: new Date().toISOString(),
+//       },
+//     }),
+//   );
   return NextResponse.json(txData);
 }
 
