@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
 const { Web3 } = require('web3');
 
-const web3 = new Web3('https://mainnet.base.org');
+const web3 = new Web3('https://optimism-mainnet.infura.io/v3/492191282eb04c3882188faa4603d30a');
 async function getResponse(req: NextRequest): Promise<NextResponse> {
 
   const body: FrameRequest = await req.json();
