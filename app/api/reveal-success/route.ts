@@ -1,12 +1,13 @@
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
-// import { Web3 }from 'web3';
+import { Web3 }from 'web3';
 
-// const web3 = new Web3('https://mainnet.base.org');
 
 async function getResponse(req: NextRequest): Promise<NextResponse> {
   const body: FrameRequest = await req.json();
+const web3 = new Web3('https://mainnet.base.org');
+
   const { isValid } = await getFrameMessage(body, {
     castReactionContext: true, 
   });
@@ -26,10 +27,10 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
 
 
 const txHash = body?.untrustedData?.transactionId || "0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172"
-// const receipt = await web3.eth.getTransactionReceipt(txHash);
+const receipt = await web3.eth.getTransactionReceipt(txHash);
 
-// const boolValue = receipt.logs[0]?.data ? web3.utils.hexToNumber(web3.utils.bytesToHex(receipt.logs[0].data)) === 1 : false;
-const boolValue = true
+const boolValue = web3.utils.hexToNumber(receipt.logs[0].data ? web3.utils.toHex(receipt.logs[0].data) : '0x0') === 1;
+// const boolValue = true
 
 
   return new NextResponse(
