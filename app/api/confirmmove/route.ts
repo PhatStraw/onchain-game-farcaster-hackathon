@@ -44,7 +44,7 @@ console.log("confirm move", message)
             action: 'tx',
             label: 'Confirm Move',
             target: `${NEXT_PUBLIC_URL}/api/reveal?choice=${message.button}`,
-            postUrl: `${NEXT_PUBLIC_URL}/api/frame`,
+            postUrl: `${NEXT_PUBLIC_URL}/api/reveal-success`,
           },
        
       ],
