@@ -222,7 +222,7 @@
   dependencies:
     "@types/node" "*"
 
-"@xmtp/frames-validator@^0.5.0":
+"@xmtp/frames-validator@^0.5.0", "@xmtp/frames-validator@^0.5.2":
   "integrity" "sha512-m62HoAs47Dz3MHpW1Ec9fdmnvK9GJYyPJl6mWifKblWmoA4s67zAuTF3V8qXv8hEUag6t1XBRF6BpfeKDva4HQ=="
   "resolved" "https://registry.npmjs.org/@xmtp/frames-validator/-/frames-validator-0.5.2.tgz"
   "version" "0.5.2"

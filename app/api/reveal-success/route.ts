@@ -1,20 +1,19 @@
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
-// const { Web3 } = require('web3');
 
-// const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
+interface ExtendedFrameRequest extends FrameRequest {
+    clientProtocol: `xmtp@${string}`; // Adjusted to match the expected type
+}
+
 async function getResponse(req: NextRequest): Promise<NextResponse> {
-
-  const body: FrameRequest = await req.json();
-
-  const { isValid } = await getFrameMessage(body, {
-    castReactionContext: true,
-  });
-
-  if (!isValid) {
-    return new NextResponse('Message not valid', { status: 500 });
-  }
+    // const validateFramesPost = (await import("@xmtp/frames-validator")).validateFramesPost;
+    const body: FrameRequest = await req.json();
+    // const extendedBody: ExtendedFrameRequest = { ...body, clientProtocol: `xmtp@yourProtocolVersion` };
+    // const validatedData = await validateFramesPost(extendedBody);
+    // if(!validatedData.verifiedWalletAddress){
+    //     return new NextResponse('Message not valid', { status: 500 });
+    // }
 // Fix This Web3 wont load
 //   const txHash =
 //     body?.untrustedData?.transactionId ||
