@@ -1,10 +1,9 @@
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
-import { JsonRpcProvider } from 'ethers';
+const { Web3 } = require('web3');
 
-// Ensure you replace 'https://mainnet.base.org' with your actual Ethereum node provider URL
-const provider = new JsonRpcProvider('https://mainnet.base.org');
+const web3 = new Web3('https://mainnet.base.org');
 async function getResponse(req: NextRequest): Promise<NextResponse> {
 
   const body: FrameRequest = await req.json();
@@ -20,10 +19,9 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
   const txHash =
     body?.untrustedData?.transactionId ||
     '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
-  const receipt = await provider.getTransactionReceipt(txHash);
+    const receipt = await web3.eth.getTransactionReceipt(txHash);
   if (!receipt) {
-    console.log(provider);
-    throw new Error(`Transaction receipt not found: ${JSON.stringify(provider)}`);
+    throw new Error(`Transaction receipt not found: ${JSON.stringify(web3)}`);
   }
   const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
   // const boolValue = true

@@ -55,10 +55,12 @@ const revealAbi = {
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"}
-const { ethers } = require('ethers');
+    const ethers = require('ethers');
 
+    const { Web3 } = require('web3');
 
-
+    const web3 = new Web3('https://mainnet.base.org');
+    console.log(web3)
 // async function decodeInputData() {
 //     const txHash = '0x5a23476d930ade401dc4d71aa33388cf5a741a4b9e955a29a1b34836cedf059f';
 //     const receipt = await provider.getTransactionReceipt(txHash);
@@ -70,33 +72,35 @@ const { ethers } = require('ethers');
 // }
 
 // decodeInputData();
-async function sendEthToSelf() {
-    // Connect to the Ethereum network
-    const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
+
+
+// async function sendEthToSelf() {
+//     // Connect to the Ethereum network
+//     const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
 
   
-    // Create a wallet instance
-    const wallet = new ethers.Wallet("10b1b74fc62d5c0767d42e4be56cdf3d5fcc023b3d66c6d05e991cb526945013", provider);
+//     // Create a wallet instance
+//     const wallet = new ethers.Wallet("10b1b74fc62d5c0767d42e4be56cdf3d5fcc023b3d66c6d05e991cb526945013", provider);
   
-    // Define the transaction
-    const tx = {
-      to: "0xEefC1dBDe4A65131702Ff32a12f404ef7512473b", // Sending to self
-      // Value is in wei (1 ether = 1e18 wei)
-      value: 1e15
-    };
+//     // Define the transaction
+//     const tx = {
+//       to: "0xA6eBc4647fbDd7Ad02796D2c0c9769aABc65d246", // Sending to self
+//       // Value is in wei (1 ether = 1e18 wei)
+//       value: 1e15
+//     };
   
-    try {
-      console.log(`Sending 0.00001 ETH to ${wallet.address}...`);
-      // Send the transaction
-      const txResponse = await wallet.sendTransaction(tx);
-      console.log('Transaction response:', txResponse);
+//     try {
+//       console.log(`Sending 0.00001 ETH to ${wallet.address}...`);
+//       // Send the transaction
+//       const txResponse = await wallet.sendTransaction(tx);
+//       console.log('Transaction response:', txResponse);
   
-      // Wait for the transaction to be mined
-      const receipt = await txResponse.wait();
-      console.log('Transaction receipt:', receipt);
-    } catch (error) {
-      console.error('Error sending ETH:', error);
-    }
-  }
+//       // Wait for the transaction to be mined
+//       const receipt = await txResponse.wait();
+//       console.log('Transaction receipt:', receipt);
+//     } catch (error) {
+//       console.error('Error sending ETH:', error);
+//     }
+//   }
   
-  sendEthToSelf();
+//   sendEthToSelf();
