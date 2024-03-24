@@ -37,7 +37,7 @@ const boolValue = true
         buttons: [
             {
                 action: 'link',
-                label: boolValue ? 'You won! Based. Click4Txn' : `You lost😬 Click4Txn`,
+                label: boolValue ? 'You won! Based🔵 Click4Txn' : `You lost😬 Not Based. Click4Txn`,
                 target: `https://basescan.org/tx/${txHash}`,
               }
           ],
