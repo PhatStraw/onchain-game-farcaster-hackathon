@@ -20,7 +20,7 @@ console.log("confirm move", message)
 
   const data = encodeFunctionData({
     abi: BuyMeACoffeeABI,
-    functionName: 'disclose',
+    functionName: 'reveal',
     args: [secret],
   });
 
