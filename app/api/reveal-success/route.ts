@@ -5,25 +5,35 @@ const { Web3 } = require('web3');
 
 async function getResponse(req: NextRequest): Promise<NextResponse> {
     
-  const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
-  const body: FrameRequest = await req.json();
-
-  const { isValid } = await getFrameMessage(body, {
-    castReactionContext: true,
-  });
-
-  if (!isValid) {
-    return new NextResponse('Message not valid', { status: 500 });
-  }
-
-  const txHash =
-    body?.untrustedData?.transactionId ||
-    '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
+    const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
+    console.log('Web3 initialized');
+    
+    const body: FrameRequest = await req.json();
+    console.log('Request body:', body);
+    
+    const { isValid } = await getFrameMessage(body, {
+      castReactionContext: true,
+    });
+    console.log('Message validity:', isValid);
+    
+    if (!isValid) {
+      console.error('Message not valid');
+      return new NextResponse('Message not valid', { status: 500 });
+    }
+    
+    const txHash = body?.untrustedData?.transactionId || '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
+    console.log('Transaction hash:', txHash);
+    
     const receipt = await web3.eth.getTransactionReceipt(txHash);
-  if (!receipt) {
-    throw new Error(`Transaction receipt not found: ${JSON.stringify(web3)}`);
-  }
-  const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
+    console.log('Transaction receipt:', receipt);
+    
+    if (!receipt) {
+      console.error(`Transaction receipt not found for hash: ${txHash}`);
+      throw new Error(`Transaction receipt not found: ${JSON.stringify(web3)}`);
+    }
+    
+    const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
+    console.log('Boolean value from receipt:', boolValue);
 //   const boolValue = true
 
   return new NextResponse(
