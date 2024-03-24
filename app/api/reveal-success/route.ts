@@ -1,14 +1,14 @@
-"use server";
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
-const { ethers } = require('ethers');
-
-const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
-
 
 async function getResponse(req: NextRequest): Promise<NextResponse> {
+  'use server';
+
   const body: FrameRequest = await req.json();
+  const ethers = await import('ethers');
+  // Replace the Web3 initialization with ethers
+  const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
   // Dynamically import ethers
 
   const { isValid } = await getFrameMessage(body, {
@@ -24,8 +24,9 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
     '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
   const receipt = await provider.getTransactionReceipt(txHash);
   if (!receipt) {
-    console.log(provider)
-    throw new Error(`Transaction receipt not found: ${provider}`)};
+    console.log(provider);
+    throw new Error(`Transaction receipt not found: ${JSON.stringify(provider)}`);
+  }
   const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
   // const boolValue = true
 
