@@ -37,24 +37,6 @@ console.log("confirm move", message)
     },
   };
 
-    return new NextResponse(
-    getFrameHtmlResponse({
-      buttons: [
-        {
-            action: 'tx',
-            label: 'Confirm Move',
-            target: `${NEXT_PUBLIC_URL}/api/reveal?choice=${message.button}`,
-            postUrl: `${NEXT_PUBLIC_URL}/api/frame`,
-          },
-       
-      ],
-     
-      image: {
-        src: `${NEXT_PUBLIC_URL}/park-1.png`,
-      },
-      postUrl: `${NEXT_PUBLIC_URL}/api/frame`
-    }),
-  );
   return NextResponse.json(txData);
 }
 
