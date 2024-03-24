@@ -59,19 +59,17 @@ const revealAbi = {
 
     const { Web3 } = require('web3');
 
-    const web3 = new Web3('https://mainnet.base.org');
+    const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
     console.log(web3)
-// async function decodeInputData() {
-//     const txHash = '0x5a23476d930ade401dc4d71aa33388cf5a741a4b9e955a29a1b34836cedf059f';
-//     const receipt = await provider.getTransactionReceipt(txHash);
-//     if (!receipt) throw new Error("Transaction receipt not found");
-//     const boolValue = parseInt(receipt.logs[0]?.data || "", 16) === 1;
-//     // Replace the Web3 initialization with ethers
-//     console.log(boolValue);
-   
-// }
-
-// decodeInputData();
+    async function decodeInputData() {
+        const txHash = '0x5a23476d930ade401dc4d71aa33388cf5a741a4b9e955a29a1b34836cedf059f';
+        const receipt = await web3.eth.getTransactionReceipt(txHash);
+        if (!receipt) throw new Error("Transaction receipt not found");
+        const boolValue = parseInt(receipt.logs[0]?.data || "", 16) === 1;
+        console.log(boolValue);
+    }
+    
+    decodeInputData();
 
 
 // async function sendEthToSelf() {

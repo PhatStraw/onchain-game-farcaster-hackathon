@@ -1,9 +1,9 @@
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
-const { Web3 } = require('web3');
+// const { Web3 } = require('web3');
 
-const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
+// const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
 async function getResponse(req: NextRequest): Promise<NextResponse> {
 
   const body: FrameRequest = await req.json();
@@ -15,16 +15,17 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
   if (!isValid) {
     return new NextResponse('Message not valid', { status: 500 });
   }
+// Fix This Web3 wont load
+//   const txHash =
+//     body?.untrustedData?.transactionId ||
+//     '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
+//     const receipt = await web3.eth.getTransactionReceipt(txHash);
+//   if (!receipt) {
+//     throw new Error(`Transaction receipt not found: ${JSON.stringify(web3)}`);
+//   }
+//   const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
 
-  const txHash =
-    body?.untrustedData?.transactionId ||
-    '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
-    const receipt = await web3.eth.getTransactionReceipt(txHash);
-  if (!receipt) {
-    throw new Error(`Transaction receipt not found: ${JSON.stringify(web3)}`);
-  }
-  const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
-  // const boolValue = true
+  const boolValue = true
 
   return new NextResponse(
     getFrameHtmlResponse({
@@ -32,7 +33,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
         {
           action: 'link',
           label: boolValue ? 'You won! Based🔵 Click4Txn' : `You lost😬 Not Based. Click4Txn`,
-          target: `https://basescan.org/tx/${txHash}`,
+          target: `https://basescan.org/tx/${"0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172"}`,
         },
       ],
       image: {
