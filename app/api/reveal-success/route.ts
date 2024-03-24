@@ -1,9 +1,9 @@
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
-import { Web3 }from 'web3';
+// import { Web3 }from 'web3';
 
-const web3 = new Web3('https://mainnet.base.org');
+// const web3 = new Web3('https://mainnet.base.org');
 
 async function getResponse(req: NextRequest): Promise<NextResponse> {
   const body: FrameRequest = await req.json();
