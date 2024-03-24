@@ -1,14 +1,13 @@
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
+import { JsonRpcProvider } from 'ethers';
 
+// Ensure you replace 'https://mainnet.base.org' with your actual Ethereum node provider URL
+const provider = new JsonRpcProvider('https://mainnet.base.org');
 async function getResponse(req: NextRequest): Promise<NextResponse> {
 
   const body: FrameRequest = await req.json();
-  const ethers = await import('ethers');
-  // Replace the Web3 initialization with ethers
-  const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
-  // Dynamically import ethers
 
   const { isValid } = await getFrameMessage(body, {
     castReactionContext: true,
