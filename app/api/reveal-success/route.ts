@@ -23,7 +23,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
   const receipt = await provider.getTransactionReceipt(txHash);
   if (!receipt) {
     console.log(provider)
-    throw new Error('Transaction receipt not found')};
+    throw new Error(`Transaction receipt not found: ${JSON.stringify(provider)}`)};
   const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
   // const boolValue = true
 
