@@ -1,193 +1,138 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.17;
 
-contract RockPaperScissorsGame {
+contract RockPaperScissors {
+  uint public constant BET_MIN = 1e16;
+  uint public constant REVEAL_TIMEOUT = 10 minutes;
 
-    uint constant public REVEAL_DURATION = 1 minutes;  
-    uint private firstRevealTimestamp;                 
+  enum Moves {
+    None,
+    Rock,
+    Paper,
+    Scissors
+  }
 
-    enum Choices {None, Rock, Paper, Scissors}        
-    enum Results {None, PlayerOne, PlayerTwo, Draw}
+  enum Outcomes {
+    None,
+    Player,
+    Draw,
+    Owner // New outcome for when the contract (or owner) wins
+  }
 
-    // Players' addresses
-    address playerOne;                                
-    address playerTwo;                                
+  address payable public player;
 
-    // Encrypted moves
-    bytes32 private encrChoicePlayerOne;              
-    bytes32 private encrChoicePlayerTwo;              
+  bytes32 private encrMovePlayer;
 
-    // Clear moves set only after both players have committed their encrypted moves
-    Choices private choicePlayerOne;                  
-    Choices private choicePlayerTwo;                  
+  Moves private movePlayer;
 
-    /**************************************************************************/
-    /*************************** REGISTRATION PHASE ***************************/
-    /**************************************************************************/
+  Moves public moveOwner;
 
-    modifier notYetRegistered() {                     
-        require(msg.sender != playerOne && msg.sender != playerTwo);
-        _;
+  bool private gameInProgress = false;
+
+  uint public playerBet;
+
+  address private owner;
+
+  constructor() {
+    owner = msg.sender;
+  }
+
+  modifier onlyOwner() {
+    require(msg.sender == owner);
+    _;
+  }
+  modifier notInProgress() {
+    require(!gameInProgress);
+    _;
+  }
+
+    modifier InProgress() {
+    require(gameInProgress);
+    _;
+  }
+
+  function register() public payable notInProgress returns (uint) {
+    require(msg.value >= BET_MIN, 'Bet must be greater than minimum amount');
+    player = payable(msg.sender);
+    playerBet = msg.value;
+    gameInProgress = true;
+    return 1;
+  }
+
+  function play(bytes32 encrMove) public InProgress returns (bool) {
+    require(msg.sender == player, 'Only the registered player can play');
+    encrMovePlayer = encrMove;
+    moveOwner = Moves(
+      (uint(keccak256(abi.encodePacked(block.timestamp, block.prevrandao))) % 3) + 1
+    );
+    return true;
+  }
+
+ 
+  function reveal(string memory secret) public InProgress returns (bool) {
+    bytes32 encrMove = sha256(abi.encodePacked(secret)); // Hash of clear input (= "move-password")
+    Moves move = Moves(getFirstChar(secret)); // Actual move (Rock / Paper / Scissors)
+
+    // If move invalid, exit
+    if (move == Moves.None) {
+      return false;
+    }
+    if (msg.sender == player && encrMove == encrMovePlayer) {
+      movePlayer = move;
+    } else {
+      return false;
     }
 
-    // Register a player.
-    // Return player's ID upon successful registration.
-    function signUp() public notYetRegistered returns (uint) {  
-        if (playerOne == address(0x0)) {
-            playerOne = msg.sender;
-            return 1;
-        } else if (playerTwo == address(0x0)) {
-            playerTwo = msg.sender;
-            return 2;
-        }
-        return 0;
+    return getOutcome();
+  }
+
+  function getOutcome() private returns (bool) {
+    bool outcome;
+    address payable addr = player;
+    if (movePlayer == moveOwner) {
+      outcome = false;
+      require(address(this).balance >= playerBet, 'Contract balance is insufficient');
+      addr.transfer(playerBet);
+    } else if (
+      (movePlayer == Moves.Rock && moveOwner == Moves.Scissors) ||
+      (movePlayer == Moves.Paper && moveOwner == Moves.Rock) ||
+      (movePlayer == Moves.Scissors && moveOwner == Moves.Paper)
+    ) {
+      outcome = true;
+    } else {
+      outcome = false;
     }
-
-    /**************************************************************************/
-    /****************************** COMMIT PHASE ******************************/
-    /**************************************************************************/
-
-    modifier hasRegistered() {                        
-        require (msg.sender == playerOne || msg.sender == playerTwo);
-        _;
+    if (outcome == true) {
+      require(address(this).balance >= playerBet * 2, 'Contract balance is insufficient');
+      addr.transfer(playerBet * 2);
     }
+    reset();
+    return outcome;
+  }
 
-    // Save player's encrypted move.
-    // Return 'true' if move was valid, 'false' otherwise.
-    function makeMove(bytes32 encrChoice) public hasRegistered returns (bool) { 
-        if (msg.sender == playerOne && encrChoicePlayerOne == 0x0) {
-            encrChoicePlayerOne = encrChoice;
-        } else if (msg.sender == playerTwo && encrChoicePlayerTwo == 0x0) {
-            encrChoicePlayerTwo = encrChoice;
-        } else {
-            return false;
-        }
-        return true;
+  function reset() private {
+    player = payable(address(0x0));
+    encrMovePlayer = 0x0;
+    moveOwner = Moves.None;
+    movePlayer = Moves.None;
+    gameInProgress = false;
+    playerBet = 0;
+  }
+
+  function fundContract() public payable onlyOwner {
+    require(msg.value >= 0.1 ether, 'Minimum funding is 0.1 ether');
+  }
+
+  function getFirstChar(string memory str) private pure returns (uint) {
+    bytes1 firstByte = bytes(str)[0];
+    if (firstByte == 0x31) {
+      return 1;
+    } else if (firstByte == 0x32) {
+      return 2;
+    } else if (firstByte == 0x33) {
+      return 3;
+    } else {
+      return 0;
     }
-
-    /**************************************************************************/
-    /****************************** REVEAL PHASE ******************************/
-    /**************************************************************************/
-
-    modifier commitPhaseFinished() {                  
-        require(encrChoicePlayerOne != 0x0 && encrChoicePlayerTwo != 0x0);
-        _;
-    }
-
-    // Compare clear move given by the player with saved encrypted move.
-    // Return clear move upon success, 'Choices.None' otherwise.
-    function disclose(string memory clearChoice) public hasRegistered commitPhaseFinished returns (Choices) {  // Previously: reveal
-        bytes32 encrChoice = sha256(abi.encodePacked(clearChoice));  
-        Choices choice     = Choices(getFirstChar(clearChoice));     // Actual move (Rock / Paper / Scissors)
-
-        // If move invalid, exit
-        if (choice == Choices.None) {
-            return Choices.None;
-        }
-
-        // If hashes match, clear move is saved
-        if (msg.sender == playerOne && encrChoice == encrChoicePlayerOne) {
-            choicePlayerOne = choice;
-        } else if (msg.sender == playerTwo && encrChoice == encrChoicePlayerTwo) {
-            choicePlayerTwo = choice;
-        } else {
-            return Choices.None;
-        }
-
-        // Timer starts after first revelation from one of the player
-        if (firstRevealTimestamp == 0) {
-            firstRevealTimestamp = block.timestamp;
-        }
-
-        return choice;
-    }
-
-    // Return first character of a given string.
-    function getFirstChar(string memory str) private pure returns (uint) {
-        bytes1 firstByte = bytes(str)[0];
-        if (firstByte == 0x31) {
-            return 1;
-        } else if (firstByte == 0x32) {
-            return 2;
-        } else if (firstByte == 0x33) {
-            return 3;
-        } else {
-            return 0;
-        }
-    }
-
-
-    /**************************************************************************/
-    /****************************** RESULT PHASE ******************************/
-    /**************************************************************************/
-
-    modifier revealPhaseFinished() {                  
-        require((choicePlayerOne != Choices.None && choicePlayerTwo != Choices.None) ||
-                (firstRevealTimestamp != 0 && block.timestamp > firstRevealTimestamp + REVEAL_DURATION));
-        _;
-    }
-
-    // Compute the outcome and return the outcome.
-    function determineOutcome() public revealPhaseFinished returns (Results) {  
-        Results outcome;
-
-        if (choicePlayerOne == choicePlayerTwo) {
-            outcome = Results.Draw;
-        } else if ((choicePlayerOne == Choices.Rock     && choicePlayerTwo == Choices.Scissors) ||
-                   (choicePlayerOne == Choices.Paper    && choicePlayerTwo == Choices.Rock)     ||
-                   (choicePlayerOne == Choices.Scissors && choicePlayerTwo == Choices.Paper)    ||
-                   (choicePlayerOne != Choices.None     && choicePlayerTwo == Choices.None)) {
-            outcome = Results.PlayerOne;
-        } else {
-            outcome = Results.PlayerTwo;
-        }
-
-        restartGame();  
-        return outcome;
-    }
-
-    // Reset the game.
-    function restartGame() private {                   
-        firstRevealTimestamp = 0;
-        playerOne            = address(0x0);
-        playerTwo            = address(0x0);
-        encrChoicePlayerOne  = 0x0;
-        encrChoicePlayerTwo  = 0x0;
-        choicePlayerOne      = Choices.None;
-        choicePlayerTwo      = Choices.None;
-    }
-
-    /**************************************************************************/
-    /**************************** HELPER FUNCTIONS ****************************/
-    /**************************************************************************/
-
-    // Return player's ID
-    function identifyPlayer() public view returns (uint) {  
-        if (msg.sender == playerOne) {
-            return 1;
-        } else if (msg.sender == playerTwo) {
-            return 2;
-        } else {
-            return 0;
-        }
-    }
-
-    // Return 'true' if both players have commited a move, 'false' otherwise.
-    function haveBothPlayed() public view returns (bool) {  
-        return (encrChoicePlayerOne != 0x0 && encrChoicePlayerTwo != 0x0);
-    }
-
-    // Return 'true' if both players have revealed their move, 'false' otherwise.
-    function haveBothRevealed() public view returns (bool) {  
-        return (choicePlayerOne != Choices.None && choicePlayerTwo != Choices.None);
-    }
-
-    // Return time left before the end of the revelation phase.
-    function timeLeftToReveal() public view returns (int) {  
-        if (firstRevealTimestamp != 0) {
-            return int((firstRevealTimestamp + REVEAL_DURATION) - block.timestamp);
-        }
-        return int(REVEAL_DURATION);
-    }
+  }
 }
