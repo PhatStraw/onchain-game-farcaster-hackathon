@@ -1,12 +1,13 @@
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
-import { Web3 }from 'web3';
+import { ethers } from 'ethers';
 
+// Replace the Web3 initialization with ethers
+const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
 
 async function getResponse(req: NextRequest): Promise<NextResponse> {
   const body: FrameRequest = await req.json();
-const web3 = new Web3('https://mainnet.base.org');
 
   const { isValid } = await getFrameMessage(body, {
     castReactionContext: true, 
@@ -15,21 +16,12 @@ const web3 = new Web3('https://mainnet.base.org');
   if (!isValid) {
     return new NextResponse('Message not valid', { status: 500 });
   }
-  const revealAbi = {
-    "constant": false,
-    "inputs": [{"name": "secret", "type": "string"}],
-    "name": "reveal",
-    "outputs": [{"name": "", "type": "bool"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-};
 
 
 const txHash = body?.untrustedData?.transactionId || "0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172"
-const receipt = await web3.eth.getTransactionReceipt(txHash);
-
-const boolValue = web3.utils.hexToNumber(receipt.logs[0].data ? web3.utils.toHex(receipt.logs[0].data) : '0x0') === 1;
+const receipt = await provider.getTransactionReceipt(txHash);
+if (!receipt) throw new Error("Transaction receipt not found");
+const boolValue = parseInt(receipt.logs[0]?.data || "", 16) === 1;
 // const boolValue = true
 
 

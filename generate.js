@@ -54,23 +54,20 @@ const revealAbi = {
     "outputs": [{"name": "", "type": "bool"}],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "function"
-};const {Web3} = require('web3');
-const web3 = new Web3('https://mainnet.base.org');
+    "type": "function"}
+const { ethers } = require('ethers');
+
+const provider = new ethers.JsonRpcProvider('https://mainnet.base.org');
 
 
 async function decodeInputData() {
     const txHash = '0x5a23476d930ade401dc4d71aa33388cf5a741a4b9e955a29a1b34836cedf059f';
-    const receipt = await web3.eth.getTransactionReceipt(txHash);
-
-    const boolValue = web3.utils.hexToNumber(receipt.logs[0].data) === 1
+    const receipt = await provider.getTransactionReceipt(txHash);
+    if (!receipt) throw new Error("Transaction receipt not found");
+    const boolValue = parseInt(receipt.logs[0]?.data || "", 16) === 1;
+    // Replace the Web3 initialization with ethers
     console.log(boolValue);
-    // Remove the '0x' and the function selector from the input data
-    const argumentsData = receipt.input.slice(10);
-
-    // Decode the input data
-    const inputData = web3.eth.abi.decodeParameters(revealAbi.inputs, argumentsData);
-    console.log(inputData);
+   
 }
 
 decodeInputData();
