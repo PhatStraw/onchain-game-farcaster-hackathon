@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
 
 async function getResponse(req: NextRequest): Promise<NextResponse> {
-  'use server';
 
   const body: FrameRequest = await req.json();
   const ethers = await import('ethers');
@@ -25,7 +24,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
   const receipt = await provider.getTransactionReceipt(txHash);
   if (!receipt) {
     console.log(provider);
-    throw new Error(`Transaction receipt not found: ${JSON.stringify(provider)}`);
+    throw new Error(`Transaction receipt not found: ${JSON.stringify(ethers)}`);
   }
   const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
   // const boolValue = true
