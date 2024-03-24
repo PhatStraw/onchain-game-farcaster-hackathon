@@ -21,7 +21,9 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
     body?.untrustedData?.transactionId ||
     '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
   const receipt = await provider.getTransactionReceipt(txHash);
-  if (!receipt) throw new Error('Transaction receipt not found');
+  if (!receipt) {
+    console.log(provider)
+    throw new Error('Transaction receipt not found')};
   const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
   // const boolValue = true
 
