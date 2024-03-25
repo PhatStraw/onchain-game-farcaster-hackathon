@@ -6,7 +6,7 @@ const { Web3 } = require('web3');
 async function getResponse(req: NextRequest): Promise<NextResponse> {
     
     const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
-    console.log('Web3 initialized');
+    console.log('Web3 initialized', web3);
     
     const body: FrameRequest = await req.json();
     console.log('Request body:', body);
@@ -16,6 +16,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
     });
     console.log('Message validity:', isValid);
     
+
     if (!isValid) {
       console.error('Message not valid');
       return new NextResponse('Message not valid', { status: 500 });
