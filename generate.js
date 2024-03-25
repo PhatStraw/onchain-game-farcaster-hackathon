@@ -47,29 +47,29 @@
 // console.log(bytes.toString('hex'));
 
 
-const revealAbi = {
-    "constant": false,
-    "inputs": [{"name": "secret", "type": "string"}],
-    "name": "reveal",
-    "outputs": [{"name": "", "type": "bool"}],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"}
-    const ethers = require('ethers');
+// const revealAbi = {
+//     "constant": false,
+//     "inputs": [{"name": "secret", "type": "string"}],
+//     "name": "reveal",
+//     "outputs": [{"name": "", "type": "bool"}],
+//     "payable": false,
+//     "stateMutability": "nonpayable",
+//     "type": "function"}
+//     const ethers = require('ethers');
 
-    const { Web3 } = require('web3');
+//     const { Web3 } = require('web3');
 
-    const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
-    console.log(web3)
-    async function decodeInputData() {
-        const txHash = '0x5a23476d930ade401dc4d71aa33388cf5a741a4b9e955a29a1b34836cedf059f';
-        const receipt = await web3.eth.getTransactionReceipt(txHash);
-        if (!receipt) throw new Error("Transaction receipt not found");
-        const boolValue = parseInt(receipt.logs[0]?.data || "", 16) === 1;
-        console.log(boolValue);
-    }
+//     const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
+//     console.log(web3)
+//     async function decodeInputData() {
+//         const txHash = '0x5a23476d930ade401dc4d71aa33388cf5a741a4b9e955a29a1b34836cedf059f';
+//         const receipt = await web3.eth.getTransactionReceipt(txHash);
+//         if (!receipt) throw new Error("Transaction receipt not found");
+//         const boolValue = parseInt(receipt.logs[0]?.data || "", 16) === 1;
+//         console.log(boolValue);
+//     }
     
-    decodeInputData();
+//     decodeInputData();
 
 
 // async function sendEthToSelf() {
@@ -102,3 +102,34 @@ const revealAbi = {
 //   }
   
 //   sendEthToSelf();
+
+async function getTransactionReceipt(txHash) {
+    const fetch = (await import('node-fetch')).default;
+  const response = await fetch(
+    'https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx',
+    {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: 8453,
+        jsonrpc: '2.0',
+        method: 'eth_getTransactionReceipt',
+        params: [txHash],
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.result; // Assuming you want the 'result' part of the JSON response
+}
+
+getTransactionReceipt("0x5a23476d930ade401dc4d71aa33388cf5a741a4b9e955a29a1b34836cedf059f").then((i)=>{
+    console.log(i)
+})
