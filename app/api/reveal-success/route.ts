@@ -14,7 +14,7 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          id: 1,
+          id: 8453,
           jsonrpc: '2.0',
           method: 'eth_getTransactionReceipt',
           params: [txHash],
