@@ -59,26 +59,21 @@ async function getResponse(req: NextRequest): Promise<NextResponse> {
   const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
   console.log('Boolean value from receipt:', boolValue);
   //   const boolValue = true
-return NextResponse.json({
-    res: {
-        boolValue,
-        receipt
-    }
-})
-//   return new NextResponse(
-//     getFrameHtmlResponse({
-//       buttons: [
-//         {
-//           action: 'link',
-//           label: boolValue ? 'You won! Based🔵 Click4Txn' : `You lost😬 Not Based. Click4Txn`,
-//           target: `https://basescan.org/tx/${txHash}`,
-//         },
-//       ],
-//       image: {
-//         src: `${NEXT_PUBLIC_URL}/park-4.png`,
-//       },
-//     }),
-//   );
+
+  return new NextResponse(
+    getFrameHtmlResponse({
+      buttons: [
+        {
+          action: 'link',
+          label: boolValue ? 'You won! Based🔵 Click4Txn' : `You lost😬 Not Based. Click4Txn`,
+          target: `https://basescan.org/tx/${txHash}`,
+        },
+      ],
+      image: {
+        src: `${NEXT_PUBLIC_URL}/park-4.png`,
+      },
+    }),
+  );
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
