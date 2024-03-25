@@ -1,41 +1,64 @@
 import { FrameRequest, getFrameMessage, getFrameHtmlResponse } from '@coinbase/onchainkit/frame';
 import { NextRequest, NextResponse } from 'next/server';
 import { NEXT_PUBLIC_URL } from '../../config';
-const { Web3 } = require('web3');
 
 async function getResponse(req: NextRequest): Promise<NextResponse> {
-    
-    const web3 = new Web3('https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx');
-    console.log('Web3 initialized', web3);
-    
-    const body: FrameRequest = await req.json();
-    console.log('Request body:', body);
-    
-    const { isValid } = await getFrameMessage(body, {
-      castReactionContext: true,
-    });
-    console.log('Message validity:', isValid);
-    
+  const fetch = (await import('node-fetch')).default;
+  async function getTransactionReceipt(txHash: string) {
+    const response = await fetch(
+      'https://base-mainnet.g.alchemy.com/v2/iDFf5eN_U6n_FW4zKq2U8n0M6feutYwx',
+      {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: 1,
+          jsonrpc: '2.0',
+          method: 'eth_getTransactionReceipt',
+          params: [txHash],
+        }),
+      },
+    );
 
-    if (!isValid) {
-      console.error('Message not valid');
-      return new NextResponse('Message not valid', { status: 500 });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
-    const txHash = body?.untrustedData?.transactionId || '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
-    console.log('Transaction hash:', txHash);
-    
-    const receipt = await web3.eth.getTransactionReceipt(txHash);
-    console.log('Transaction receipt:', receipt);
-    
-    if (!receipt) {
-      console.error(`Transaction receipt not found for hash: ${txHash}`);
-      throw new Error(`Transaction receipt not found: ${JSON.stringify(web3)}`);
-    }
-    
-    const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
-    console.log('Boolean value from receipt:', boolValue);
-//   const boolValue = true
+
+    const data: any = await response.json();
+    return data.result; // Assuming you want the 'result' part of the JSON response
+  }
+
+  const body: FrameRequest = await req.json();
+  console.log('Request body:', body);
+
+  const { isValid } = await getFrameMessage(body, {
+    castReactionContext: true,
+  });
+  console.log('Message validity:', isValid);
+
+  if (!isValid) {
+    console.error('Message not valid');
+    return new NextResponse('Message not valid', { status: 500 });
+  }
+
+  const txHash =
+    body?.untrustedData?.transactionId ||
+    '0x33638327b2e288dbf1c74191b30c18aca0b81cfbff8a48fe7a9d04e0e1195172';
+  console.log('Transaction hash:', txHash);
+
+  const receipt = await getTransactionReceipt(txHash);
+  console.log('Transaction receipt:', receipt);
+
+  if (!receipt) {
+    console.error(`Transaction receipt not found for hash: ${txHash}`);
+    throw new Error(`Transaction receipt not found: `);
+  }
+
+  const boolValue = parseInt(receipt.logs[0]?.data || '', 16) === 1;
+  console.log('Boolean value from receipt:', boolValue);
+  //   const boolValue = true
 
   return new NextResponse(
     getFrameHtmlResponse({
